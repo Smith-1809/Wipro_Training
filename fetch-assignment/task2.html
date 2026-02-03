@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task 2 - Random User</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #userCard {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 20px;
+            display: inline-block;
+            border-radius: 10px;
+        }
+
+        img {
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Random User Generator</h2>
+
+<button onclick="getUser()">Get Random User</button>
+
+<div id="userCard"></div>
+
+<script>
+async function getUser() {
+    try {
+        const response = await fetch("https://randomuser.me/api/");
+        const data = await response.json();
+
+        const user = data.results[0];
+
+        const name = user.name.first + " " + user.name.last;
+        const email = user.email;
+        const image = user.picture.large;
+
+        document.getElementById("userCard").innerHTML = `
+            <h3>${name}</h3>
+            <p>${email}</p>
+            <img src="${image}" width="120">
+        `;
+    }
+    catch(error) {
+        console.log(error);
+    }
+}
+</script>
+
+</body>
+</html>

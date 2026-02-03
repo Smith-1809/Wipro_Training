@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task 1 - Fetch Employees</title>
+</head>
+<body>
+
+<h2>Fetch Employees Data</h2>
+<button onclick="getEmployees()">Get Employees</button>
+
+<script>
+async function getEmployees() {
+    try {
+        const response = await fetch("https://jsonplaceholder.typicode.com/users");
+        const data = await response.json();
+
+        console.log(data); // shows in console
+        alert("Check console for employee data");
+    }
+    catch(error) {
+        console.log(error);
+    }
+}
+</script>
+
+</body>
+</html>
