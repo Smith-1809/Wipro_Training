@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title> Smart City Portal</title>
+
+    <!-- Bootstrap -->
+     <link href="https://cdn.jsdeliver.net/npm/Bootsrap@5.3.2/dist/css/Bootstrap.min.css" rel="stylesheet">
+
+     <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="p-3 bg-dark text-white d-flex justify-content-between">
+    <h3>Smart City</h3>
+
+    <nav>
+        <button class="nav-btn btn btn-light m-1" data-target="home">Home</button>
+        <button class="nav-btn btn btn-light m-1" data-target="services">Services</button>
+        <button class="nav-btn btn btn-light m-1" data-target="request">Request</button>
+        <button class="nav-btn btn btn-light m-1" data-target="status">Status</button>
+    </nav>
+</header>
+
+<main class="container mt-4">
+
+    <!-- TASK 2-->
+    <!-- HERO -->
+     <section id="home" class="section">
+        <div class="hero text-center">
+            <h1>Citizen Services Portal</h1>
+            <p>Quick. Simple. Online.</p>
+            <button id="goRequest" class="btn btn-primary">Request Services</button>
+        </div>
+     </section>
+
+     <!-- SERVICES -->
+      <section id="services" class="section d-none">
+        <div class="row" id="serviceCards"></div>
+      </section>
+
+      <!-- REQUEST FORM -->
+       <section id="request" class="section d-none">
+
+        <form id="requestForm" class="card p-4">
+
+            <input id="name" class="form-control mb-2" placeholder="Name">
+
+            <input id="email" class="form-control mb-2" placeholder="Email">
+
+            <select id="type" class="form-control mb-2">
+                <option value="">Select Service</option>
+                <option>Water</option>
+                <option>Electricity</option>
+                <option>Road</option>
+            </select>
+
+            <textarea id="desc" class="form-control mb-2" placeholder="Description"></textarea>
+
+            <button class="btn btn-success">Submit</button>
+
+            <p id="msg"></p>
+        </form>
+       </section>
+
+       <!-- STATUS -->
+        <section id="status" class="section d-none">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Services</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </section>
+
+</main>
+
+<footer class="text-center p-3 bg-dark text-white">
+    ©️ Smart City 
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

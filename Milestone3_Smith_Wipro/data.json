@@ -1,0 +1,5 @@
+[
+    {"name":"Water Supply","desc":"Water related issues"},
+    {"name":"Electricity", "desc":"Power issues"},
+    {"name":"Road Repair","desc":"Road damages"}
+]

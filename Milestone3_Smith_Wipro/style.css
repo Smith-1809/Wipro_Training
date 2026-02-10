@@ -1,0 +1,17 @@
+body{
+    font-family: Arial;
+}
+
+.hero{
+    height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #e6f2ff;
+    border-radius: 12px;
+}
+
+.section{
+    margin-top: 2rem;
+}
