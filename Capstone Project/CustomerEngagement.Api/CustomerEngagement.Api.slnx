@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="../CustomerEngagement.Application/CustomerEngagement.Application.csproj" />
+  <Project Path="../CustomerEngagement.Domain/CustomerEngagement.Domain.csproj" />
+  <Project Path="../CustomerEngagement.Infrastructure/CustomerEngagement.Infrastructure.csproj" />
+  <Project Path="CustomerEngagement.Api.csproj" />
+</Solution>
