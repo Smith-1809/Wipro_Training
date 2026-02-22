@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Data.SqlClient;
-using System.Data;
+﻿using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Application.Interfaces;
-using CustomerEngagement.Domain.Entities;
+using CustomerEngagement.Domain.Enums;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using System.Data;
 
 namespace CustomerEngagement.Infrastructure.Repositories;
 
@@ -12,105 +13,195 @@ public class TicketRepository : ITicketRepository
 
     public TicketRepository(IConfiguration configuration)
     {
-        _connectionString =
-            configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("Connection string not found.");
+        _connectionString = configuration.GetConnectionString("DefaultConnection")!;
     }
 
-    public async Task AddAsync(Ticket ticket)
+    // ============================
+    // CREATE
+    // ============================
+    public async Task CreateAsync(
+        Guid ticketId,
+        Guid customerId,
+        Guid agentId,
+        int categoryId,
+        string title,
+        string description,
+        int status,
+        DateTime createdAt)
     {
         using var connection = new SqlConnection(_connectionString);
+        using var command = new SqlCommand("sp_CreateTicket", connection);
+        command.CommandType = CommandType.StoredProcedure;
 
-        using var command = new SqlCommand(
-            @"INSERT INTO Tickets
-              (TicketId, CustomerId, AgentId, CategoryId, Title,
-               Description, Status, CreatedAt)
-              VALUES
-              (@Id, @CustomerId, @AgentId, @CategoryId,
-               @Title, @Description, @Status, @CreatedAt)",
-            connection);
-
-        command.Parameters.AddWithValue("@Id", ticket.Id);
-        command.Parameters.AddWithValue("@CustomerId", ticket.CustomerId);
-        command.Parameters.AddWithValue("@AgentId", ticket.AgentId);
-        command.Parameters.AddWithValue("@CategoryId", ticket.CategoryId);
-        command.Parameters.AddWithValue("@Title", ticket.Title);
-        command.Parameters.AddWithValue("@Description", ticket.Description);
-        command.Parameters.AddWithValue("@Status", (int)ticket.Status);
-        command.Parameters.AddWithValue("@CreatedAt", ticket.CreatedAt);
+        command.Parameters.Add("@TicketId", SqlDbType.UniqueIdentifier).Value = ticketId;
+        command.Parameters.Add("@CustomerId", SqlDbType.UniqueIdentifier).Value = customerId;
+        command.Parameters.Add("@AgentId", SqlDbType.UniqueIdentifier).Value = agentId;
+        command.Parameters.Add("@CategoryId", SqlDbType.Int).Value = categoryId;
+        command.Parameters.Add("@Title", SqlDbType.NVarChar, 200).Value = title;
+        command.Parameters.Add("@Description", SqlDbType.NVarChar, -1).Value = description;
+        command.Parameters.Add("@Status", SqlDbType.Int).Value = status;
+        command.Parameters.Add("@CreatedAt", SqlDbType.DateTime2).Value = createdAt;
 
         await connection.OpenAsync();
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task<Ticket?> GetByIdAsync(Guid id)
+    // ============================
+    // GET ALL
+    // ============================
+    public async Task<IEnumerable<TicketResponseDto>> GetAllAsync()
     {
+        var tickets = new List<TicketResponseDto>();
+
         using var connection = new SqlConnection(_connectionString);
-
-        using var command = new SqlCommand(
-            "SELECT * FROM Tickets WHERE TicketId = @Id", connection);
-
-        command.Parameters.AddWithValue("@Id", id);
+        using var command = new SqlCommand("sp_GetAllTickets", connection);
+        command.CommandType = CommandType.StoredProcedure;
 
         await connection.OpenAsync();
-
         using var reader = await command.ExecuteReaderAsync();
 
-        if (!reader.Read())
-            return null;
+        while (await reader.ReadAsync())
+        {
+            tickets.Add(new TicketResponseDto
+            {
+                TicketId = (Guid)reader["TicketId"],
+                Title = reader["Title"].ToString()!,
+                Description = reader["Description"].ToString()!,
+                Status = (TicketStatus)(int)reader["Status"], // FIXED
+                CreatedAt = (DateTime)reader["CreatedAt"],
+                UpdatedAt = reader["UpdatedAt"] as DateTime?
+            });
+        }
 
-        return new Ticket(
-            (Guid)reader["CustomerId"],
-            (Guid)reader["AgentId"],
-            (int)reader["CategoryId"],
-            reader["Title"].ToString()!,
-            reader["Description"].ToString()!
-        );
+        return tickets;
     }
 
-    public async Task UpdateAsync(Ticket ticket)
+    // ============================
+    // GET BY CUSTOMER
+    // ============================
+    public async Task<IEnumerable<TicketResponseDto>> GetByCustomerAsync(Guid customerId)
+    {
+        var tickets = new List<TicketResponseDto>();
+
+        using var connection = new SqlConnection(_connectionString);
+        using var command = new SqlCommand("sp_GetTicketsByCustomer", connection);
+        command.CommandType = CommandType.StoredProcedure;
+
+        command.Parameters.Add("@CustomerId", SqlDbType.UniqueIdentifier).Value = customerId;
+
+        await connection.OpenAsync();
+        using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            tickets.Add(new TicketResponseDto
+            {
+                TicketId = (Guid)reader["TicketId"],
+                Title = reader["Title"].ToString()!,
+                Description = reader["Description"].ToString()!,
+                Status = (TicketStatus)(int)reader["Status"], // FIXED
+                CreatedAt = (DateTime)reader["CreatedAt"],
+                UpdatedAt = reader["UpdatedAt"] as DateTime?
+            });
+        }
+
+        return tickets;
+    }
+
+    // ============================
+    // UPDATE
+    // ============================
+    public async Task UpdateAsync(
+        Guid ticketId,
+        string title,
+        string description,
+        int status,
+        DateTime updatedAt)
     {
         using var connection = new SqlConnection(_connectionString);
+        using var command = new SqlCommand("sp_UpdateTicket", connection);
+        command.CommandType = CommandType.StoredProcedure;
 
-        using var command = new SqlCommand(
-            @"UPDATE Tickets
-              SET Status = @Status,
-                  UpdatedAt = @UpdatedAt,
-                  ResolvedAt = @ResolvedAt
-              WHERE TicketId = @Id",
-            connection);
-
-        command.Parameters.AddWithValue("@Id", ticket.Id);
-        command.Parameters.AddWithValue("@Status", (int)ticket.Status);
-        command.Parameters.AddWithValue("@UpdatedAt", ticket.UpdatedAt ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("@ResolvedAt", ticket.ResolvedAt ?? (object)DBNull.Value);
+        command.Parameters.Add("@TicketId", SqlDbType.UniqueIdentifier).Value = ticketId;
+        command.Parameters.Add("@Title", SqlDbType.NVarChar, 200).Value = title;
+        command.Parameters.Add("@Description", SqlDbType.NVarChar, -1).Value = description;
+        command.Parameters.Add("@Status", SqlDbType.Int).Value = status;
+        command.Parameters.Add("@UpdatedAt", SqlDbType.DateTime2).Value = updatedAt;
 
         await connection.OpenAsync();
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task<bool> ExistsDuplicateAsync(Guid customerId, string title)
+    // ============================
+    // RESOLVE
+    // ============================
+    public async Task ResolveAsync(Guid ticketId, int status, DateTime resolvedAt)
     {
         using var connection = new SqlConnection(_connectionString);
+        using var command = new SqlCommand("sp_ResolveTicket", connection);
+        command.CommandType = CommandType.StoredProcedure;
 
-        using var command = new SqlCommand(
-            @"SELECT COUNT(1)
-              FROM Tickets
-              WHERE CustomerId = @CustomerId
-              AND Title = @Title",
-            connection);
-
-        command.Parameters.AddWithValue("@CustomerId", customerId);
-        command.Parameters.AddWithValue("@Title", title);
+        command.Parameters.Add("@TicketId", SqlDbType.UniqueIdentifier).Value = ticketId;
+        command.Parameters.Add("@Status", SqlDbType.Int).Value = status;
+        command.Parameters.Add("@ResolvedAt", SqlDbType.DateTime2).Value = resolvedAt;
 
         await connection.OpenAsync();
+        await command.ExecuteNonQueryAsync();
+    }
 
-        var result = await command.ExecuteScalarAsync();
+    // ============================
+    // REPORT
+    // ============================
+    public async Task<IEnumerable<TicketReportDto>> GetStatusReportAsync()
+    {
+        var report = new List<TicketReportDto>();
 
-        int count = result != null && result != DBNull.Value
-            ? Convert.ToInt32(result)
-            : 0;
+        using var connection = new SqlConnection(_connectionString);
+        using var command = new SqlCommand("sp_GetTicketStatusReport", connection);
+        command.CommandType = CommandType.StoredProcedure;
 
-        return count > 0;
+        await connection.OpenAsync();
+        using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            report.Add(new TicketReportDto
+            {
+                Status = (TicketStatus)(int)reader["Status"], // FIXED
+                Total = (int)reader["Count"]                  // FIXED
+            });
+        }
+
+        return report;
+    }
+
+    public async Task<IEnumerable<TicketResponseDto>> GetPagedAsync(int pageNumber, int pageSize)
+    {
+        var tickets = new List<TicketResponseDto>();
+
+        using var connection = new SqlConnection(_connectionString);
+        using var command = new SqlCommand("sp_GetTicketsPaged", connection);
+        command.CommandType = CommandType.StoredProcedure;
+
+        command.Parameters.Add("@PageNumber", SqlDbType.Int).Value = pageNumber;
+        command.Parameters.Add("@PageSize", SqlDbType.Int).Value = pageSize;
+
+        await connection.OpenAsync();
+        using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            tickets.Add(new TicketResponseDto
+            {
+                TicketId = (Guid)reader["TicketId"],
+                Title = reader["Title"].ToString()!,
+                Description = reader["Description"].ToString()!,
+                Status = (TicketStatus)(int)reader["Status"],
+                CreatedAt = (DateTime)reader["CreatedAt"],
+                UpdatedAt = reader["UpdatedAt"] as DateTime?
+            });
+        }
+
+        return tickets;
     }
 }

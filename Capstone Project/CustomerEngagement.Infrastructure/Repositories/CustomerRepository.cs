@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Data.SqlClient;
-using System.Data;
-using CustomerEngagement.Application.Interfaces;
+﻿using CustomerEngagement.Application.Interfaces;
 using CustomerEngagement.Domain.Entities;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using System.Data;
 
 namespace CustomerEngagement.Infrastructure.Repositories;
 
@@ -12,13 +12,7 @@ public class CustomerRepository : ICustomerRepository
 
     public CustomerRepository(IConfiguration configuration)
     {
-        _connectionString =
-    configuration.GetConnectionString("DefaultConnection");
-
-        if (string.IsNullOrEmpty(_connectionString))
-        {
-            Console.WriteLine("Connection string is NULL!");
-        }
+        _connectionString = configuration.GetConnectionString("DefaultConnection")!;
     }
 
     public async Task AddAsync(Customer customer)
@@ -29,11 +23,11 @@ public class CustomerRepository : ICustomerRepository
             @"INSERT INTO Customers (CustomerId, FullName, Email, Phone, CreatedAt)
               VALUES (@Id, @FullName, @Email, @Phone, @CreatedAt)", connection);
 
-        command.Parameters.AddWithValue("@Id", customer.Id);
-        command.Parameters.AddWithValue("@FullName", customer.FullName);
-        command.Parameters.AddWithValue("@Email", customer.Email);
-        command.Parameters.AddWithValue("@Phone", customer.Phone);
-        command.Parameters.AddWithValue("@CreatedAt", customer.CreatedAt);
+        command.Parameters.Add("@Id", SqlDbType.UniqueIdentifier).Value = customer.Id;
+        command.Parameters.Add("@FullName", SqlDbType.NVarChar, 150).Value = customer.FullName;
+        command.Parameters.Add("@Email", SqlDbType.NVarChar, 100).Value = customer.Email;
+        command.Parameters.Add("@Phone", SqlDbType.NVarChar, 20).Value = customer.Phone;
+        command.Parameters.Add("@CreatedAt", SqlDbType.DateTime2).Value = customer.CreatedAt;
 
         await connection.OpenAsync();
         await command.ExecuteNonQueryAsync();
@@ -46,7 +40,7 @@ public class CustomerRepository : ICustomerRepository
         using var command = new SqlCommand(
             "SELECT * FROM Customers WHERE Email = @Email", connection);
 
-        command.Parameters.AddWithValue("@Email", email);
+        command.Parameters.Add("@Email", SqlDbType.NVarChar, 100).Value = email;
 
         await connection.OpenAsync();
 

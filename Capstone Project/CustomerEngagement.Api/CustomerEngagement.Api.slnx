@@ -2,5 +2,6 @@
   <Project Path="../CustomerEngagement.Application/CustomerEngagement.Application.csproj" />
   <Project Path="../CustomerEngagement.Domain/CustomerEngagement.Domain.csproj" />
   <Project Path="../CustomerEngagement.Infrastructure/CustomerEngagement.Infrastructure.csproj" />
+  <Project Path="../CustomerEngagement.Tests/CustomerEngagement.Tests.csproj" Id="25257805-d5fc-47b1-a6f4-c467e50b2482" />
   <Project Path="CustomerEngagement.Api.csproj" />
 </Solution>

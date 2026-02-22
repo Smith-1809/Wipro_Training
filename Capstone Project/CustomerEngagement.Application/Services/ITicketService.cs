@@ -1,18 +1,27 @@
-﻿using CustomerEngagement.Domain.Entities;
-using CustomerEngagement.Domain.Enums;
+﻿using CustomerEngagement.Application.DTOs;
 
 namespace CustomerEngagement.Application.Interfaces;
 
 public interface ITicketService
 {
-    Task<Guid> CreateTicketAsync(
-        Guid customerId,
-        Guid agentId,
-        int categoryId,
-        string title,
-        string description);
+    // Create
+    Task<Guid> CreateAsync(CreateTicketDto dto);
 
-    Task<Ticket?> GetTicketByIdAsync(Guid id);
+    // Get single
+    Task<TicketResponseDto?> GetByIdAsync(Guid id);
 
-    Task UpdateTicketStatusAsync(Guid id, TicketStatus status);
+    // Get paginated
+    Task<IEnumerable<TicketResponseDto>> GetAllAsync(int pageNumber, int pageSize);
+
+    // Get by customer
+    Task<IEnumerable<TicketResponseDto>> GetByCustomerAsync(Guid customerId);
+
+    // Update
+    Task UpdateAsync(UpdateTicketDto dto);
+
+    // Resolve
+    Task ResolveAsync(Guid ticketId);
+
+    // Report
+    Task<IEnumerable<TicketReportDto>> GetStatusReportAsync();
 }

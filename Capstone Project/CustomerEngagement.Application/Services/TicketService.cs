@@ -1,6 +1,7 @@
-﻿using CustomerEngagement.Application.Interfaces;
-using CustomerEngagement.Domain.Entities;
+﻿using CustomerEngagement.Application.DTOs;
+using CustomerEngagement.Application.Interfaces;
 using CustomerEngagement.Domain.Enums;
+using System.Linq;
 
 namespace CustomerEngagement.Application.Services;
 
@@ -13,39 +14,83 @@ public class TicketService : ITicketService
         _repository = repository;
     }
 
-    public async Task<Guid> CreateTicketAsync(
-        Guid customerId,
-        Guid agentId,
-        int categoryId,
-        string title,
-        string description)
+    // ==============================
+    // CREATE
+    // ==============================
+    public async Task<Guid> CreateAsync(CreateTicketDto dto)
     {
-        var duplicate = await _repository.ExistsDuplicateAsync(customerId, title);
+        var ticketId = Guid.NewGuid();
 
-        if (duplicate)
-            throw new Exception("Duplicate ticket.");
+        await _repository.CreateAsync(
+            ticketId,
+            dto.CustomerId,
+            dto.AgentId,
+            dto.CategoryId,
+            dto.Title,
+            dto.Description,
+            (int)TicketStatus.Open,
+            DateTime.UtcNow
+        );
 
-        var ticket = new Ticket(customerId, agentId, categoryId, title, description);
-
-        await _repository.AddAsync(ticket);
-
-        return ticket.Id;
+        return ticketId;
     }
 
-    public async Task<Ticket?> GetTicketByIdAsync(Guid id)
+    // ==============================
+    // GET BY ID
+    // ==============================
+    public async Task<TicketResponseDto?> GetByIdAsync(Guid id)
     {
-        return await _repository.GetByIdAsync(id);
+        var all = await _repository.GetAllAsync();
+        return all.FirstOrDefault(t => t.TicketId == id);
     }
 
-    public async Task UpdateTicketStatusAsync(Guid id, TicketStatus status)
+    // ==============================
+    // GET ALL (PAGINATION)
+    // ==============================
+    public async Task<IEnumerable<TicketResponseDto>> GetAllAsync(int pageNumber, int pageSize)
     {
-        var ticket = await _repository.GetByIdAsync(id);
+        return await _repository.GetPagedAsync(pageNumber, pageSize);
+    }
 
-        if (ticket == null)
-            throw new Exception("Ticket not found.");
+    // ==============================
+    // GET BY CUSTOMER
+    // ==============================
+    public async Task<IEnumerable<TicketResponseDto>> GetByCustomerAsync(Guid customerId)
+    {
+        return await _repository.GetByCustomerAsync(customerId);
+    }
 
-        ticket.UpdateStatus(status);
+    // ==============================
+    // UPDATE
+    // ==============================
+    public async Task UpdateAsync(UpdateTicketDto dto)
+    {
+        await _repository.UpdateAsync(
+            dto.TicketId,
+            dto.Title,
+            dto.Description,
+            dto.Status,
+            DateTime.UtcNow
+        );
+    }
 
-        await _repository.UpdateAsync(ticket);
+    // ==============================
+    // RESOLVE
+    // ==============================
+    public async Task ResolveAsync(Guid ticketId)
+    {
+        await _repository.ResolveAsync(
+            ticketId,
+            (int)TicketStatus.Resolved,
+            DateTime.UtcNow
+        );
+    }
+
+    // ==============================
+    // REPORT
+    // ==============================
+    public async Task<IEnumerable<TicketReportDto>> GetStatusReportAsync()
+    {
+        return await _repository.GetStatusReportAsync();
     }
 }
