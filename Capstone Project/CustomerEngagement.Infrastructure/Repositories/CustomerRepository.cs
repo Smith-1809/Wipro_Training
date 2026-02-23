@@ -1,4 +1,5 @@
 ﻿using CustomerEngagement.Application.Interfaces;
+using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Domain.Entities;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
@@ -54,5 +55,34 @@ public class CustomerRepository : ICustomerRepository
             reader["Email"].ToString()!,
             reader["Phone"].ToString()!
         );
+    }
+
+    // ✅ NEW METHOD
+    public async Task<List<CustomerDto>> GetAllAsync()
+    {
+        var customers = new List<CustomerDto>();
+
+        using var connection = new SqlConnection(_connectionString);
+
+        using var command = new SqlCommand(
+            "SELECT CustomerId, FullName, Email, Phone FROM Customers ORDER BY CreatedAt DESC",
+            connection);
+
+        await connection.OpenAsync();
+
+        using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            customers.Add(new CustomerDto
+            {
+                CustomerId = Guid.Parse(reader["CustomerId"].ToString()!),
+                FullName = reader["FullName"].ToString()!,
+                Email = reader["Email"].ToString()!,
+                Phone = reader["Phone"].ToString()!
+            });
+        }
+
+        return customers;
     }
 }

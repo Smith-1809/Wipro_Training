@@ -1,4 +1,5 @@
 ﻿using CustomerEngagement.Application.Interfaces;
+using CustomerEngagement.Application.DTOs;
 using CustomerEngagement.Domain.Entities;
 
 namespace CustomerEngagement.Application.Services;
@@ -24,5 +25,11 @@ public class CustomerService : ICustomerService
         await _repository.AddAsync(customer);
 
         return customer.Id;
+    }
+
+    // ✅ NEW METHOD
+    public async Task<List<CustomerDto>> GetAllCustomersAsync()
+    {
+        return await _repository.GetAllAsync();
     }
 }
