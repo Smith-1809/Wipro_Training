@@ -1,46 +1,223 @@
-// ========================================
-// GLOBAL STATE
-// ========================================
+// ================= GLOBAL STATE =================
+
 let allTickets = [];
+let filteredTickets = [];
+let currentPage = 1;
+const pageSize = 5;
 
+// ================= LOAD TICKETS =================
 
-// ========================================
-// LOAD TICKETS
-// ========================================
 async function loadTickets() {
 
-    showLoading("ticketTableBody", 5);
-
     try {
-        const tickets = await apiRequest("/Tickets");
+        const tbody = document.getElementById("ticketTableBody");
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center">Loading...</td></tr>`;
 
-        allTickets = tickets;
+        allTickets = await getTickets();
 
-        renderTickets(allTickets);
+        applyTicketFilters();
+
+        updateDashboardCards();
 
     } catch (error) {
-        showToast(error, "error");
+        showToast("Failed to load tickets", "error");
     }
 }
 
+// ================= FILTER + SEARCH =================
 
-// ========================================
-// CREATE TICKET
-// ========================================
+function applyTicketFilters() {
+
+    const searchText = document.getElementById("ticketSearch").value.toLowerCase();
+    const statusFilter = document.getElementById("ticketStatusFilter").value;
+
+    filteredTickets = allTickets.filter(ticket => {
+
+        const matchesSearch =
+            ticket.title.toLowerCase().includes(searchText) ||
+            ticket.ticketId.toLowerCase().includes(searchText);
+
+        const matchesStatus =
+            statusFilter === "all" ||
+            ticket.status.toString() === statusFilter;
+
+        return matchesSearch && matchesStatus;
+    });
+
+    currentPage = 1;
+    renderTickets();
+}
+
+// ================= RENDER =================
+
+function renderTickets() {
+
+    const tbody = document.getElementById("ticketTableBody");
+    tbody.innerHTML = "";
+
+    if (filteredTickets.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center">No tickets found</td></tr>`;
+        renderPagination();
+        return;
+    }
+
+    const start = (currentPage - 1) * pageSize;
+    const paginatedTickets = filteredTickets.slice(start, start + pageSize);
+
+    paginatedTickets.forEach(ticket => {
+
+        const statusText =
+            ticket.status === 0 ? "Open" :
+            ticket.status === 1 ? "In Progress" : "Resolved";
+
+let actionButton = "";
+
+if (ticket.status === 0) {
+    actionButton = `
+        <button class="btn btn-sm btn-warning me-1"
+            onclick="markInProgress('${ticket.ticketId}')">
+            Start
+        </button>
+    `;
+} 
+else if (ticket.status === 1) {
+    actionButton = `
+        <button class="btn btn-sm btn-success"
+            onclick="resolveTicket('${ticket.ticketId}')">
+            Resolve
+        </button>
+    `;
+} 
+else {
+    actionButton = `
+        <button class="btn btn-sm btn-secondary" disabled>
+            Resolved
+        </button>
+    `;
+}
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${ticket.ticketId}</td>
+                <td>${ticket.title}</td>
+                <td class="${
+    ticket.status === 0 ? "status-open" :
+    ticket.status === 1 ? "status-progress" :
+    "status-resolved"
+}">
+    ${statusText}
+</td>
+                <td>${new Date(ticket.createdAt).toLocaleString()}</td>
+                <td>${actionButton}</td>
+            </tr>
+        `;
+    });
+
+    renderPagination();
+}
+
+// ================= PAGINATION =================
+
+function renderPagination() {
+
+    const pagination = document.getElementById("ticketPagination");
+    pagination.innerHTML = "";
+
+    const totalPages = Math.ceil(filteredTickets.length / pageSize);
+    if (totalPages <= 1) return;
+
+    pagination.innerHTML += `
+        <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>
+        </li>
+    `;
+
+    for (let i = 1; i <= totalPages; i++) {
+        pagination.innerHTML += `
+            <li class="page-item ${currentPage === i ? "active" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+            </li>
+        `;
+    }
+
+    pagination.innerHTML += `
+        <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>
+        </li>
+    `;
+}
+
+function changePage(page) {
+
+    const totalPages = Math.ceil(filteredTickets.length / pageSize);
+
+    if (page < 1 || page > totalPages) return;
+
+    currentPage = page;
+    renderTickets();
+}
+
+// ================= CREATE TICKET =================
+
 async function handleCreateTicket(event) {
+
+    event.preventDefault();
 
     const button = event.target;
     button.disabled = true;
 
-    const customerId = document.getElementById("ticketCustomerId").value;
-    const agentId = document.getElementById("ticketAgentId").value;
-    const categoryId = parseInt(document.getElementById("ticketCategoryId").value);
-    const title = document.getElementById("ticketTitle").value;
-    const description = document.getElementById("ticketDescription").value;
+    const customerIdInput = document.getElementById("ticketCustomerId");
+    const agentIdInput = document.getElementById("ticketAgentId");
+    const categoryIdInput = document.getElementById("ticketCategoryId");
+    const titleInput = document.getElementById("ticketTitle");
+    const descriptionInput = document.getElementById("ticketDescription");
+
+    const customerId = customerIdInput.value.trim();
+    const agentId = agentIdInput.value.trim();
+    const categoryId = parseInt(categoryIdInput.value);
+    const title = titleInput.value.trim();
+    const description = descriptionInput.value.trim();
+
+    let isValid = true;
+
+    [customerIdInput, agentIdInput, categoryIdInput, titleInput, descriptionInput]
+        .forEach(i => i.classList.remove("is-invalid"));
+
+    const guidRegex = /^[0-9a-fA-F-]{36}$/;
+
+    if (!guidRegex.test(customerId)) {
+        customerIdInput.classList.add("is-invalid");
+        isValid = false;
+    }
+
+    if (!guidRegex.test(agentId)) {
+        agentIdInput.classList.add("is-invalid");
+        isValid = false;
+    }
+
+    if (!categoryId) {
+        categoryIdInput.classList.add("is-invalid");
+        isValid = false;
+    }
+
+    if (!title || title.length < 5) {
+        titleInput.classList.add("is-invalid");
+        isValid = false;
+    }
+
+    if (!description || description.length < 10) {
+        descriptionInput.classList.add("is-invalid");
+        isValid = false;
+    }
+
+    if (!isValid) {
+        showToast("Please correct highlighted fields.", "error");
+        button.disabled = false;
+        return;
+    }
 
     try {
-
-        await apiRequest("/Tickets", "POST", {
+        await createTicket({
             customerId,
             agentId,
             categoryId,
@@ -48,127 +225,103 @@ async function handleCreateTicket(event) {
             description
         });
 
-        // Close modal safely (NO FREEZE FIX)
-        const modalElement = document.getElementById("ticketModal");
-        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        showToast("Ticket created successfully");
+        loadTickets();
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById("ticketModal"));
         modal.hide();
 
-        document.body.classList.remove("modal-open");
-        document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
-
-        showToast("Ticket created successfully!");
-
-        await loadTickets();
-
-    } catch (error) {
-        showToast(error, "error");
-    } finally {
-        button.disabled = false;
-    }
-}
-
-
-// ========================================
-// RESOLVE TICKET
-// ========================================
-async function resolveTicket(ticketId) {
-
-    try {
-
-        const response = await fetch(
-            `https://localhost:7227/api/Tickets/resolve/${ticketId}`,
-            { method: "PUT" }
-        );
-
-        if (!response.ok)
-            throw new Error("Failed to resolve ticket");
-
-        showToast("Ticket resolved successfully!");
-
-        await loadTickets();
+        customerIdInput.value = "";
+        agentIdInput.value = "";
+        categoryIdInput.value = "";
+        titleInput.value = "";
+        descriptionInput.value = "";
 
     } catch (error) {
         showToast(error.message, "error");
     }
+
+    button.disabled = false;
 }
 
+// ================= RESOLVE TICKET =================
 
-// ========================================
-// APPLY SEARCH + STATUS FILTER
-// ========================================
-function applyTicketFilters() {
+async function resolveTicket(ticketId) {
 
-    const searchValue = document
-        .getElementById("ticketSearch")
-        .value
-        .toLowerCase();
+    const ticket = allTickets.find(t => t.ticketId === ticketId);
 
-    const statusFilter = document
-        .getElementById("ticketStatusFilter")
-        .value;
+    if (!ticket) return;
 
-    let filtered = allTickets;
-
-    // Search filter
-    if (searchValue) {
-        filtered = filtered.filter(ticket =>
-            ticket.title.toLowerCase().includes(searchValue)
-        );
-    }
-
-    // Status filter
-    if (statusFilter !== "all") {
-        filtered = filtered.filter(ticket =>
-            ticket.status.toString() === statusFilter
-        );
-    }
-
-    renderTickets(filtered);
-}
-
-
-// ========================================
-// RENDER TICKETS
-// ========================================
-function renderTickets(tickets) {
-
-    const tbody = document.getElementById("ticketTableBody");
-    tbody.innerHTML = "";
-
-    if (!tickets || tickets.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="text-center">
-                    No tickets found.
-                </td>
-            </tr>`;
+    if (ticket.status === 2) {
+        showToast("Ticket already resolved.", "error");
         return;
     }
 
-    tickets.forEach(ticket => {
+    try {
+        await fetch(`https://localhost:7227/api/Tickets/resolve/${ticketId}`, {
+            method: "PUT"
+        });
 
-        const id = ticket.ticketId || ticket.id;
+        showToast("Ticket resolved successfully");
+        loadTickets();
 
-        let statusText = "Open";
-        if (ticket.status === 1) statusText = "In Progress";
-        if (ticket.status === 2) statusText = "Resolved";
+    } catch (error) {
+        showToast("Failed to resolve ticket", "error");
+    }
+}
 
-        const isResolved = ticket.status === 2;
+async function markInProgress(ticketId) {
 
-        tbody.innerHTML += `
-            <tr>
-                <td>${id}</td>
-                <td>${ticket.title}</td>
-                <td>${statusText}</td>
-                <td>${new Date(ticket.createdAt).toLocaleString()}</td>
-                <td>
-                    <button class="btn btn-sm btn-success"
-                        onclick="resolveTicket('${id}')"
-                        ${isResolved ? "disabled" : ""}>
-                        Resolve
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
+    const ticket = allTickets.find(t => t.ticketId === ticketId);
+    if (!ticket) return;
+
+    try {
+
+        const response = await fetch(
+            `${BASE_URL}/Tickets`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    ticketId: ticket.ticketId,
+                    title: ticket.title,
+                    description: ticket.description,
+                    status: 1
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Update failed");
+        }
+
+        showToast("Ticket moved to In Progress");
+
+        await loadTickets(); // immediate refresh
+
+    } catch (error) {
+        console.error(error);
+        showToast("Failed to update ticket", "error");
+    }
+}
+
+// ================= DASHBOARD UPDATE =================
+
+function updateDashboardCards() {
+
+    if (!allTickets) return;
+
+    const total = allTickets.length;
+    const open = allTickets.filter(t => t.status === 0).length;
+    const resolved = allTickets.filter(t => t.status === 2).length;
+
+    const totalEl = document.getElementById("totalTickets");
+    const openEl = document.getElementById("openTickets");
+    const resolvedEl = document.getElementById("resolvedTickets");
+
+    if (totalEl) totalEl.innerText = total;
+    if (openEl) openEl.innerText = open;
+    if (resolvedEl) resolvedEl.innerText = resolved;
 }
