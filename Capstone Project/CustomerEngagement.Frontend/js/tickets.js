@@ -180,6 +180,8 @@ async function handleCreateTicket(event) {
 
     let isValid = true;
 
+// ================= VALIDATIONS =================
+
     [customerIdInput, agentIdInput, categoryIdInput, titleInput, descriptionInput]
         .forEach(i => i.classList.remove("is-invalid"));
 

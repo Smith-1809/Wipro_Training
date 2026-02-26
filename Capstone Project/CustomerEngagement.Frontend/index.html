@@ -91,62 +91,71 @@
 </div>
 
     <!-- ================= NAV TABS ================= -->
-    <ul class="nav nav-tabs mb-4">
-        <li class="nav-item">
-            <button class="nav-link active"
-                    data-bs-toggle="tab"
-                    data-bs-target="#ticketsTab">
-                Tickets
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link"
-                    data-bs-toggle="tab"
-                    data-bs-target="#customersTab">
-                Customers
-            </button>
-        </li>
-    </ul>
+<ul class="nav nav-tabs mb-4" id="mainTabs">
+    <li class="nav-item">
+        <button class="nav-link active"
+                data-bs-toggle="tab"
+                data-bs-target="#ticketsTab">
+            Tickets
+        </button>
+    </li>
 
-    <div class="tab-content">
+    <li class="nav-item">
+        <button class="nav-link"
+                data-bs-toggle="tab"
+                data-bs-target="#customersTab">
+            Customers
+        </button>
+    </li>
 
-        <!-- ================= TICKETS TAB ================= -->
-        <div class="tab-pane fade show active" id="ticketsTab">
+    <li class="nav-item">
+        <button class="nav-link"
+                data-bs-toggle="tab"
+                data-bs-target="#agentsTab">
+            Agents
+        </button>
+    </li>
+</ul>
 
-            <!-- Search + Filter + Create -->
-            <div class="row mb-3">
+<div class="tab-content">
 
-                <div class="col-md-5">
-                    <input type="text"
-                           id="ticketSearch"
-                           class="form-control"
-                           placeholder="Search tickets..."
-                           onkeyup="applyTicketFilters()">
-                </div>
+    <!-- ================= TICKETS TAB ================= -->
+    <div class="tab-pane fade show active" id="ticketsTab">
 
-                <div class="col-md-4">
-                    <select id="ticketStatusFilter"
-                            class="form-select"
-                            onchange="applyTicketFilters()">
-                        <option value="all">All Status</option>
-                        <option value="0">Open</option>
-                        <option value="1">In Progress</option>
-                        <option value="2">Resolved</option>
-                    </select>
-                </div>
+        <!-- Search + Filter + Create -->
+        <div class="row mb-3">
 
-                <div class="col-md-3 text-end">
-                    <button class="btn btn-primary"
-                            data-bs-toggle="modal"
-                            data-bs-target="#ticketModal">
-                        Create Ticket
-                    </button>
-                </div>
-
+            <div class="col-md-5">
+                <input type="text"
+                       id="ticketSearch"
+                       class="form-control"
+                       placeholder="Search tickets..."
+                       onkeyup="applyTicketFilters()">
             </div>
 
-            <table class="table table-bordered table-striped">
-                <thead class="table-dark">
+            <div class="col-md-4">
+                <select id="ticketStatusFilter"
+                        class="form-select"
+                        onchange="applyTicketFilters()">
+                    <option value="all">All Status</option>
+                    <option value="0">Open</option>
+                    <option value="1">In Progress</option>
+                    <option value="2">Resolved</option>
+                </select>
+            </div>
+
+            <div class="col-md-3 text-end">
+                <button class="btn btn-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#ticketModal">
+                    Create Ticket
+                </button>
+            </div>
+
+        </div>
+
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
                 <tr>
                     <th>Ticket Id</th>
                     <th>Title</th>
@@ -154,48 +163,73 @@
                     <th>Created At</th>
                     <th>Action</th>
                 </tr>
-                </thead>
-                <tbody id="ticketTableBody"></tbody>
-            </table>
+            </thead>
+            <tbody id="ticketTableBody"></tbody>
+        </table>
 
-            <!-- Ticket Pagination -->
-            <div class="d-flex justify-content-center mt-3">
-                <ul class="pagination" id="ticketPagination"></ul>
-            </div>
-
+        <div class="d-flex justify-content-center mt-3">
+            <ul class="pagination" id="ticketPagination"></ul>
         </div>
 
-        <!-- ================= CUSTOMERS TAB ================= -->
-        <div class="tab-pane fade" id="customersTab">
+    </div>
 
-            <div class="d-flex justify-content-end mb-3">
-                <button class="btn btn-success"
-                        data-bs-toggle="modal"
-                        data-bs-target="#customerModal">
-                    Create Customer
-                </button>
-            </div>
 
-            <table class="table table-bordered table-striped">
-                <thead class="table-dark">
+    <!-- ================= CUSTOMERS TAB ================= -->
+    <div class="tab-pane fade" id="customersTab">
+
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-success"
+                    data-bs-toggle="modal"
+                    data-bs-target="#customerModal">
+                Create Customer
+            </button>
+        </div>
+
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
                 <tr>
                     <th>Customer Id</th>
                     <th>Full Name</th>
                     <th>Email</th>
                     <th>Phone</th>
                 </tr>
-                </thead>
-                <tbody id="customerTableBody"></tbody>
-            </table>
+            </thead>
+            <tbody id="customerTableBody"></tbody>
+        </table>
 
-            <!-- Customer Pagination -->
-            <div class="d-flex justify-content-center mt-3">
-                <ul class="pagination" id="customerPagination"></ul>
-            </div>
-
+        <div class="d-flex justify-content-center mt-3">
+            <ul class="pagination" id="customerPagination"></ul>
         </div>
 
     </div>
+
+
+    <!-- ================= AGENTS TAB ================= -->
+    <div class="tab-pane fade" id="agentsTab">
+
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#agentModal">
+                Create Agent
+            </button>
+        </div>
+
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Active</th>
+                    <th>Workload</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="agentTableBody"></tbody>
+        </table>
+
+    </div>
+
 </div>
 
 <!-- ================= LOGOUT BUTTON ================= -->
@@ -223,7 +257,7 @@
 
                 <div class="mb-3">
                     <label>Agent Id</label>
-                    <input type="text" id="ticketAgentId" class="form-control">
+                    <select id="ticketAgentId" class="form-select"></select>
                     <div class="invalid-feedback">Valid GUID required.</div>
                 </div>
 
@@ -311,6 +345,52 @@
     </div>
 </div>
 
+<!-- ===================== CREATE AGENT MODAL ===================== -->
+<div class="modal fade" id="agentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Create Agent</h5>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="agentName" class="form-control">
+                    <div class="invalid-feedback">
+                        Name must be at least 3 characters.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="agentEmail" class="form-control">
+                    <div class="invalid-feedback">
+                        Enter valid email.
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button class="btn btn-primary"
+                        onclick="handleCreateAgent(event)">
+                    Create
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 <!-- ================= TOAST ================= -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="appToast" class="toast align-items-center text-bg-success border-0">
@@ -329,8 +409,10 @@
 <script src="js/ui.js"></script>
 <script src="js/tickets.js"></script>
 <script src="js/customers.js"></script>
+<script src="js/agents.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
+
 
 </body>
 </html>

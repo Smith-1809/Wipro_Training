@@ -19,6 +19,9 @@ builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 
+builder.Services.AddScoped<IAgentService, AgentService>();
+builder.Services.AddScoped<IAgentRepository, AgentRepository>();
+
 // ---------------------------
 // Enable CORS (VERY IMPORTANT)
 // ---------------------------
